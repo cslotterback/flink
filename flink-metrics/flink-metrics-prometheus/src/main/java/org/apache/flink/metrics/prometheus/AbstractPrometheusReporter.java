@@ -69,6 +69,8 @@ public abstract class AbstractPrometheusReporter implements MetricReporter {
 	private static final String SCOPE_PREFIX = "flink" + SCOPE_SEPARATOR;
 
 	private final Map<String, AbstractMap.SimpleImmutableEntry<Collector, Integer>> collectorsWithCountByMetricName = new HashMap<>();
+	protected static List<String> labelFilterConfigList = new ArrayList<>();
+	protected static String metricFilterPrefix = "";
 
 	@VisibleForTesting
 	static String replaceInvalidChars(final String input) {
@@ -100,9 +102,13 @@ public abstract class AbstractPrometheusReporter implements MetricReporter {
 		List<String> dimensionKeys = new LinkedList<>();
 		List<String> dimensionValues = new LinkedList<>();
 		for (final Map.Entry<String, String> dimension : group.getAllVariables().entrySet()) {
-			final String key = dimension.getKey();
-			dimensionKeys.add(CHARACTER_FILTER.filterCharacters(key.substring(1, key.length() - 1)));
-			dimensionValues.add(labelValueCharactersFilter.filterCharacters(dimension.getValue()));
+			final String key = CHARACTER_FILTER.filterCharacters(dimension.getKey().substring(1, dimension.getKey().length() - 1));
+			final String value = labelValueCharactersFilter.filterCharacters(dimension.getValue());
+			if (metricName.contains(metricFilterPrefix) && labelFilterConfigList.contains(key)){
+				continue;
+			}
+			dimensionKeys.add(key);
+			dimensionValues.add(value);
 		}
 
 		final String scopedMetricName = getScopedName(metricName, group);
