@@ -40,10 +40,10 @@ public class PrometheusReporter extends AbstractPrometheusReporter {
 
 	static final String ARG_PORT = "port";
 	static final String ARG_LABEL_FILTER = "labelsFilter";
-	static final String ARG_METRIC_FILTER_PREFIX = "metricFilterPrefix";
+	static final String ARG_METRIC_FILTER_PREFIXES = "metricFilterPrefixes";
 	private static final String DEFAULT_PORT = "9249";
 	private static final String DEFAULT_LABEL_FILTER = "";
-	private static final String DEFAULT_METRIC_FILTER_PREFIX = "";
+	private static final String DEFAULT_METRIC_FILTER_PREFIXES = "";
 
 	private HTTPServer httpServer;
 	private int port;
@@ -60,10 +60,11 @@ public class PrometheusReporter extends AbstractPrometheusReporter {
 
 		String portsConfig = config.getString(ARG_PORT, DEFAULT_PORT);
 		String labelFilterConfig = config.getString(ARG_LABEL_FILTER, DEFAULT_LABEL_FILTER);
-		metricFilterPrefix = config.getString(ARG_METRIC_FILTER_PREFIX, DEFAULT_METRIC_FILTER_PREFIX).trim();
+		String metricFilterConfig = config.getString(ARG_METRIC_FILTER_PREFIXES, DEFAULT_METRIC_FILTER_PREFIXES);
+		metricFilterPrefixList = Arrays.asList(metricFilterConfig.trim().split(","));
 		if (!labelFilterConfig.isEmpty()) {
-			if (metricFilterPrefix.isEmpty()){
-				log.warn("no prometheus metric name prefix provided for filter label list {}", labelFilterConfig);
+			if (metricFilterPrefixList.isEmpty()){
+				log.warn("no metric filter prefix provided for label list {}", labelFilterConfig);
 			}
 			this.labelFilterConfigList = Arrays.asList(labelFilterConfig.trim().split(","));
 		}

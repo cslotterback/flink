@@ -70,7 +70,7 @@ public abstract class AbstractPrometheusReporter implements MetricReporter {
 
 	private final Map<String, AbstractMap.SimpleImmutableEntry<Collector, Integer>> collectorsWithCountByMetricName = new HashMap<>();
 	protected static List<String> labelFilterConfigList = new ArrayList<>();
-	protected static String metricFilterPrefix = "";
+	protected static List<String> metricFilterPrefixList = new ArrayList<>();
 
 	@VisibleForTesting
 	static String replaceInvalidChars(final String input) {
@@ -101,14 +101,21 @@ public abstract class AbstractPrometheusReporter implements MetricReporter {
 
 		List<String> dimensionKeys = new LinkedList<>();
 		List<String> dimensionValues = new LinkedList<>();
+		boolean filter = false;
+		for (String metricFilterPrefix : metricFilterPrefixList) {
+			if (metricName.contains(metricFilterPrefix)) {
+				filter = true;
+			}
+		}
+
 		for (final Map.Entry<String, String> dimension : group.getAllVariables().entrySet()) {
 			final String key = CHARACTER_FILTER.filterCharacters(dimension.getKey().substring(1, dimension.getKey().length() - 1));
 			final String value = labelValueCharactersFilter.filterCharacters(dimension.getValue());
-			if (metricName.contains(metricFilterPrefix) && labelFilterConfigList.contains(key)){
-				continue;
+
+			if (!filter || !labelFilterConfigList.contains(key)) {
+				dimensionKeys.add(key);
+				dimensionValues.add(value);
 			}
-			dimensionKeys.add(key);
-			dimensionValues.add(value);
 		}
 
 		final String scopedMetricName = getScopedName(metricName, group);
